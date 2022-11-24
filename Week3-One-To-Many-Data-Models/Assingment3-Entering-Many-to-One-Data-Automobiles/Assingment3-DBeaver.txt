@@ -1,0 +1,62 @@
+CREATE TABLE make(
+/* SERIAL - A special kind of database object generator. 
+ * used to generate a sequence of integers which are often used as 
+ * primay key
+ */
+id SERIAL,
+/*UNIQUE - used to enforce data integrity. Ensures that no duplicate
+ * values are entered in specific columns that is not primary key column
+ */
+name varchar(128) UNIQUE,
+PRIMARY KEY(id)
+);
+
+CREATE TABLE model(
+id SERIAL, 
+name VARCHAR(128), 
+/*The table that contains the foreign key is called the 
+ * referencing table or child table
+ * DELETE CASCADE - Delete rows from the child table auto., when
+ * the rows from the parent table are deleted
+ */
+make_id INTEGER REFERENCES make(id) ON DELETE CASCADE,
+PRIMARY KEY(id)
+);
+
+CREATE TABLE make (
+    id SERIAL,
+    name VARCHAR(128) UNIQUE,
+    PRIMARY KEY(id)
+);
+
+CREATE TABLE model (
+  id SERIAL,
+  name VARCHAR(128),
+  make_id INTEGER REFERENCES make(id) ON DELETE CASCADE,
+  PRIMARY KEY(id)
+);
+
+INSERT INTO make(name) values('Kia');
+INSERT INTO make(name) values('Lexus');
+
+INSERT INTO model(name,make_id) values('Spectra 2.0L',( select id from make where id = '1'));
+
+INSERT INTO model(name,make_id) values('Sportage 2WD',(select id from make where id = '1'));
+
+INSERT INTO model(name,make_id) values('Sportage 4WD',( select id from make where id = '1'));
+
+INSERT INTO model(name,make_id) values('RX 350 L',( select id from make where id = '2'));
+
+INSERT INTO model(name,make_id) values('RX 350 L AWD',( select id from make where id = '2'));
+
+
+drop table make;
+drop table model;
+
+select * from make;
+select * from model;
+
+SELECT make.name, model.name
+    FROM model
+    JOIN make ON model.make_id = make.id
+    ORDER BY make.name LIMIT 5;

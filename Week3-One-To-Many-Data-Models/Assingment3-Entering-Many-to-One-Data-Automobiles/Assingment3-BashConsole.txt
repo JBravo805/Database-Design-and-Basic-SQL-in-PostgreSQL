@@ -1,0 +1,133 @@
+03:21 ~ $ psql -h pg.pg4e.com -p 5432 -U pg4e_d1fcd1185c pg4e_d1fcd1185c
+Password for user pg4e_d1fcd1185c: 
+psql (12.11 (Ubuntu 12.11-1.pgdg20.04+1), server 11.7 (Ubuntu 11.7-2.pgdg18.04+1))
+SSL connection (protocol: TLSv1.3, cipher: TLS_AES_256_GCM_SHA384, bits: 256, compression: off)
+Type "help" for help.
+pg4e_d1fcd1185c=> \dt
+               List of relations
+ Schema |    Name     | Type  |      Owner      
+--------+-------------+-------+-----------------
+ public | ages        | table | pg4e_d1fcd1185c
+ public | automagic   | table | pg4e_d1fcd1185c
+ public | make        | table | pg4e_d1fcd1185c
+ public | model       | table | pg4e_d1fcd1185c
+ public | pg4e_debug  | table | pg4e_d1fcd1185c
+ public | pg4e_meta   | table | pg4e_d1fcd1185c
+ public | pg4e_result | table | pg4e_d1fcd1185c
+ public | track_raw   | table | pg4e_d1fcd1185c
+(8 rows)
+pg4e_d1fcd1185c=> select * from make;
+ id | name  
+----+-------
+  1 | Kia
+  2 | Lexus
+(2 rows)
+pg4e_d1fcd1185c=> select * from model;
+ id |     name     | make_id 
+----+--------------+---------
+  2 | Spectra 2.0L |       1
+  3 | Sportage 2WD |       1
+  4 | Sportage 4WD |       1
+pg4e_d1fcd1185c=> drop table make;
+  5 | RX 350 L     |       2
+  6 | RX 350 L AWD |       2
+(5 rows)
+
+pg4e_d1fcd1185c=> SELECT make.name, model.name
+pg4e_d1fcd1185c->     FROM model
+pg4e_d1fcd1185c->     JOIN make ON model.make_id = make.id
+pg4e_d1fcd1185c->     ORDER BY make.name LIMIT 5;
+ name  |     name     
+-------+--------------
+ Kia   | Spectra 2.0L
+ Kia   | Sportage 2WD
+ Kia   | Sportage 4WD
+ Lexus | RX 350 L
+ Lexus | RX 350 L AWD
+(5 rows)
+
+pg4e_d1fcd1185c=> drop table make;
+ERROR:  cannot drop table make because other objects depend on it
+DETAIL:  constraint model_make_id_fkey on table model depends on table make
+HINT:  Use DROP ... CASCADE to drop the dependent objects too.
+pg4e_d1fcd1185c=> drop model;
+ERROR:  syntax error at or near "model"
+LINE 1: drop model;
+             ^
+pg4e_d1fcd1185c=> drop table model;
+DROP TABLE
+pg4e_d1fcd1185c=> drop table make;
+DROP TABLE
+pg4e_d1fcd1185c=> CREATE TABLE make (
+pg4e_d1fcd1185c(>     id SERIAL,
+pg4e_d1fcd1185c(>     name VARCHAR(128) UNIQUE,
+pg4e_d1fcd1185c(>     PRIMARY KEY(id)
+pg4e_d1fcd1185c(> );
+CREATE TABLE
+pg4e_d1fcd1185c=> CREATE TABLE model (
+pg4e_d1fcd1185c(>   id SERIAL,
+pg4e_d1fcd1185c(>   name VARCHAR(128),
+pg4e_d1fcd1185c(>   make_id INTEGER REFERENCES make(id) ON DELETE CASCADE,
+pg4e_d1fcd1185c(>   PRIMARY KEY(id)
+pg4e_d1fcd1185c(> );
+CREATE TABLE
+pg4e_d1fcd1185c=> INSERT INTO make(name) values('Kia');
+INSERT 0 1
+pg4e_d1fcd1185c=> INSERT INTO make(name) values('Lexus');
+INSERT 0 1
+pg4e_d1fcd1185c=> select * from make;
+ id | name  
+----+-------
+  1 | Kia
+  2 | Lexus
+(2 rows)
+
+pg4e_d1fcd1185c=> INSERT INTO model(name,make_id) values('Spectra 2.0L',( select id from make where id = '1'));
+INSERT 0 1
+pg4e_d1fcd1185c=> 
+pg4e_d1fcd1185c=> INSERT INTO model(name,make_id) values('Sportage 2WD',(select id from make where id = '1'));
+INSERT 0 1
+pg4e_d1fcd1185c=> 
+pg4e_d1fcd1185c=> INSERT INTO model(name,make_id) values('Sportage 4WD',( select id from make where id = '1'));
+INSERT 0 1
+pg4e_d1fcd1185c=> 
+pg4e_d1fcd1185c=> INSERT INTO model(name,make_id) values('RX 350 L',( select id from make where id = '2'));
+INSERT 0 1
+pg4e_d1fcd1185c=> 
+pg4e_d1fcd1185c=> INSERT INTO model(name,make_id) values('RX 350 L AWD',( select id from make where id = '2'));
+INSERT 0 1
+pg4e_d1fcd1185c=> select * from model;
+ id |     name     | make_id 
+----+--------------+---------
+  1 | Spectra 2.0L |       1
+  2 | Sportage 2WD |       1
+  3 | Sportage 4WD |       1
+  4 | RX 350 L     |       2
+  5 | RX 350 L AWD |       2
+(5 rows)
+
+pg4e_d1fcd1185c=> SELECT make.name, model.name
+pg4e_d1fcd1185c->     FROM model
+pg4e_d1fcd1185c->     JOIN make ON model.make_id = make.id
+pg4e_d1fcd1185c->     ORDER BY make.name LIMIT 5;
+ name  |     name     
+-------+--------------
+ Kia   | Spectra 2.0L
+ Kia   | Sportage 2WD
+ Kia   | Sportage 4WD
+ Lexus | RX 350 L
+ Lexus | RX 350 L AWD
+(5 rows)
+
+pg4e_d1fcd1185c=> SELECT make.name, model.name, make.id
+    FROM model
+    JOIN make ON model.make_id = make.id
+    ORDER BY make.name LIMIT 5;
+ name  |     name     | id 
+-------+--------------+----
+ Kia   | Spectra 2.0L |  1
+ Kia   | Sportage 2WD |  1
+ Kia   | Sportage 4WD |  1
+ Lexus | RX 350 L     |  2
+ Lexus | RX 350 L AWD |  2
+(5 rows)
